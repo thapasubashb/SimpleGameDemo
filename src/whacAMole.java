@@ -55,6 +55,7 @@ public class whacAMole {
                 g2d.dispose();
             }
         };
+
         textPanel.setOpaque(false);
         textPanel.setPreferredSize(new Dimension(boardWidth, 110));
         textPanel.setLayout(new GridBagLayout()); // Perfect absolute centering
