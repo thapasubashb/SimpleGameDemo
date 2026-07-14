@@ -336,4 +336,53 @@ public class WhacAMoleNeon extends JPanel implements ActionListener {
         g2.fillOval(4, 4, 56, 56);
         
         // Draw Emoji
-        g2.setColor(Color.WHITE)
+        g2.setColor(Color.WHITE);
+        g2.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 32));
+        FontMetrics fm = g2.getFontMetrics();
+        int x = (64 - fm.stringWidth(emoji)) / 2;
+        int y = (64 + fm.getAscent()) / 2 - 2;
+        g2.drawString(emoji, x, y);
+        
+        g2.dispose();
+        return new ImageIcon(img);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("★ MEGA ARCADE: WHAC-A-MOLE ★");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setResizable(false);
+            frame.setLocationRelativeTo(null);
+            frame.add(new WhacAMoleNeon());
+            frame.pack();
+            frame.setVisible(true);
+        });
+    }
+    
+    // --- INNER CLASSES ---
+    static class Particle {
+        double x, y;
+        double vx, vy;
+        int size;
+        Color color;
+        int life = 50; // frames
+        
+        Particle(int x, int y, Color color) {
+            this.x = x;
+            this.y = y;
+            this.color = color;
+            this.size = new Random().nextInt(6) + 4;
+            double angle = Math.random() * Math.PI * 2;
+            double speed = Math.random() * 4 + 1;
+            this.vx = Math.cos(angle) * speed;
+            this.vy = Math.sin(angle) * speed;
+        }
+        
+        void update() {
+            x += vx;
+            y += vy;
+            life--;
+            size *= 0.95; // shrink
+        }
+    }
+}
