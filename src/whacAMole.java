@@ -1,181 +1,195 @@
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.io.File;
-import java.io.IOException;
-import java.util.Random;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
-public class whacAMole {
-    int boardWidth = 3;
-    int boardHeight = 3;
-    JFrame frame;
-    JLabel textLabel;
-    JButton restartButton;
-    JPanel textPanel;
-    JPanel boardPanel;
-    JButton[] board;
-    ImageIcon moleIcon;
-    ImageIcon plantIcon;
-    JButton currMoleTile;
-    JButton currPlantTile;
-    Random random;
-    Timer setMoleTimer;
-    Timer setPlantTimer;
-    int score;
-    Color bgLaserDark = new Color(10, 14, 28);
-    Color surfaceNeon = new Color(24, 42, 61);
-    Color tileBase = new Color(41, 61, 83);
-    Color neonLaserCyan = new Color(0, 255, 255);
-    Color neonHotPink = new Color(255, 0, 128);
-    Color neonLimeGreen = new Color(120, 255, 0);
-    Color borderGlow = new Color(255, 255, 255);
+public class whacAMole extends JPanel implements ActionListener {
+    private static final int WIDTH = 800;
+    private static final int HEIGHT = 500;
+    private static final int GROUND_Y = 420;
+
+    private int playerX = 100;
+    private int playerY = GROUND_Y - 50;
+    private int playerWidth = 36;
+    private int playerHeight = 50;
+    private int playerVelY = 0;
+    private boolean movingLeft = false;
+    private boolean movingRight = false;
+    private boolean jumping = false;
+    private boolean gameOver = false;
+
+    private int score = 0;
+    private int enemyX = WIDTH - 80;
+    private int enemyY = GROUND_Y - 32;
+    private int enemyWidth = 30;
+    private int enemyHeight = 32;
+    private int enemySpeed = 4;
+
+    private final Timer timer;
 
     public whacAMole() {
-        random = new Random();
+        setPreferredSize(new Dimension(WIDTH, HEIGHT));
+        setBackground(new Color(135, 206, 235));
+        setFocusable(true);
 
-        frame = new JFrame("Whac-A-Mole");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(460, 530);
-        frame.setLayout(new BorderLayout(10, 10));
-        frame.getContentPane().setBackground(bgLaserDark);
-
-        textPanel = new JPanel();
-        textPanel.setBackground(bgLaserDark);
-        textPanel.setBorder(BorderFactory.createEmptyBorder(12, 12, 0, 12));
-
-        textLabel = new JLabel("Score: 0");
-        textLabel.setForeground(neonLaserCyan);
-        textLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        textPanel.add(textLabel);
-
-        restartButton = new JButton("Restart");
-        restartButton.setBackground(neonHotPink);
-        restartButton.setForeground(Color.WHITE);
-        restartButton.setFocusPainted(false);
-        restartButton.addActionListener(e -> resetGame());
-        textPanel.add(restartButton);
-
-        boardPanel = new JPanel(new GridLayout(boardHeight, boardWidth, 10, 10));
-        boardPanel.setBackground(bgLaserDark);
-        boardPanel.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
-
-        board = new JButton[boardWidth * boardHeight];
-        for (int i = 0; i < board.length; i++) {
-            JButton tile = new JButton();
-            tile.setBackground(tileBase);
-            tile.setForeground(Color.WHITE);
-            tile.setBorder(BorderFactory.createLineBorder(borderGlow, 2));
-            tile.setFocusPainted(false);
-            tile.addActionListener(this::handleTileAction);
-            board[i] = tile;
-            boardPanel.add(tile);
-        }
-
-        loadIcons();
-
-        frame.add(textPanel, BorderLayout.NORTH);
-        frame.add(boardPanel, BorderLayout.CENTER);
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-
-        initializeGrid();
-        resetGame();
-
-        setMoleTimer = new Timer(900, e -> spawnEntity(true));
-        setMoleTimer.setInitialDelay(700);
-        setMoleTimer.start();
-
-        setPlantTimer = new Timer(1100, e -> spawnEntity(false));
-        setPlantTimer.setInitialDelay(900);
-        setPlantTimer.start();
-    }
-
-    private void initializeGrid() {
-        for (JButton tile : board) {
-            tile.setText("");
-            tile.setIcon(null);
-            tile.setBackground(tileBase);
-            tile.setOpaque(true);
-            tile.setBorder(BorderFactory.createLineBorder(borderGlow, 2));
-        }
-        currMoleTile = null;
-        currPlantTile = null;
-    }
-
-    private void handleTileAction(ActionEvent event) {
-        JButton clickedTile = (JButton) event.getSource();
-
-        if (clickedTile == currMoleTile) {
-            score++;
-            textLabel.setText("Score: " + score);
-            clickedTile.setIcon(null);
-            clickedTile.setText("");
-            clickedTile.setBackground(tileBase);
-            currMoleTile = null;
-        } else if (clickedTile == currPlantTile) {
-            score = Math.max(0, score - 1);
-            textLabel.setText("Score: " + score);
-            clickedTile.setIcon(null);
-            clickedTile.setText("");
-            clickedTile.setBackground(tileBase);
-            currPlantTile = null;
-        }
-    }
-
-    private void spawnEntity(boolean isMole) {
-        initializeGrid();
-        int index = random.nextInt(board.length);
-        JButton tile = board[index];
-
-        if (isMole) {
-            tile.setIcon(moleIcon);
-            tile.setBackground(neonLimeGreen);
-            currMoleTile = tile;
-        } else {
-            tile.setIcon(plantIcon);
-            tile.setBackground(neonHotPink);
-            currPlantTile = tile;
-        }
-    }
-
-    private void resetGame() {
-        score = 0;
-        textLabel.setText("Score: 0");
-        initializeGrid();
-    }
-
-    private void loadIcons() {
-        moleIcon = loadIcon("monty.png");
-        plantIcon = loadIcon("piranha.png");
-        if (moleIcon == null) {
-            moleIcon = new ImageIcon();
-        }
-        if (plantIcon == null) {
-            plantIcon = new ImageIcon();
-        }
-    }
-
-    private ImageIcon loadIcon(String fileName) {
-        File[] possibleLocations = {
-                new File(fileName),
-                new File("src", fileName),
-                new File("." + File.separator + "src" + File.separator + fileName)
-        };
-
-        for (File file : possibleLocations) {
-            if (file.exists()) {
-                try {
-                    return new ImageIcon(ImageIO.read(file));
-                } catch (IOException ignored) {
-                    // Fall back to a text-based tile if the image cannot be loaded.
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_LEFT:
+                        movingLeft = true;
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        movingRight = true;
+                        break;
+                    case KeyEvent.VK_SPACE:
+                        if (!jumping && !gameOver) {
+                            jumping = true;
+                            playerVelY = -15;
+                        }
+                        break;
                 }
             }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_LEFT:
+                        movingLeft = false;
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        movingRight = false;
+                        break;
+                }
+            }
+        });
+
+        timer = new Timer(16, this);
+        timer.start();
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (!gameOver) {
+            if (movingLeft && playerX > 0) {
+                playerX -= 6;
+            }
+            if (movingRight && playerX < WIDTH - playerWidth) {
+                playerX += 6;
+            }
+
+            playerVelY += 1;
+            playerY += playerVelY;
+
+            if (playerY + playerHeight >= GROUND_Y) {
+                playerY = GROUND_Y - playerHeight;
+                playerVelY = 0;
+                jumping = false;
+            }
+
+            enemyX -= enemySpeed;
+            if (enemyX + enemyWidth < 0) {
+                enemyX = WIDTH;
+                enemySpeed = 4 + (score / 5);
+                score++;
+            }
+
+            if (checkCollision()) {
+                gameOver = true;
+            }
         }
-        return null;
+        repaint();
+    }
+
+    private boolean checkCollision() {
+        Rectangle playerRect = new Rectangle(playerX, playerY, playerWidth, playerHeight);
+        Rectangle enemyRect = new Rectangle(enemyX, enemyY, enemyWidth, enemyHeight);
+        return playerRect.intersects(enemyRect);
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        g2.setColor(new Color(120, 200, 255));
+        g2.fillRect(0, 0, WIDTH, HEIGHT);
+
+        g2.setColor(new Color(34, 139, 34));
+        g2.fillRect(0, GROUND_Y, WIDTH, HEIGHT - GROUND_Y);
+
+        g2.setColor(Color.WHITE);
+        g2.fillOval(80, 70, 60, 40);
+        g2.fillOval(120, 60, 80, 50);
+        g2.fillOval(560, 90, 70, 45);
+        g2.fillOval(620, 75, 90, 55);
+
+        g2.setColor(new Color(120, 70, 20));
+        g2.fillRect(0, GROUND_Y, WIDTH, 8);
+
+        g2.setColor(new Color(160, 82, 45));
+        g2.fillRect(250, 330, 140, 18);
+        g2.fillRect(500, 300, 140, 18);
+
+        g2.setColor(new Color(250, 200, 60));
+        g2.fillOval(playerX, playerY, playerWidth, playerHeight);
+
+        g2.setColor(Color.RED);
+        g2.fillRect(playerX + 4, playerY + 18, playerWidth - 8, 20);
+
+        g2.setColor(new Color(80, 40, 0));
+        g2.fillRect(playerX + 8, playerY + 22, 8, 12);
+        g2.fillRect(playerX + 20, playerY + 22, 8, 12);
+
+        g2.setColor(Color.BLUE);
+        g2.fillRect(playerX + 10, playerY + 8, 6, 6);
+        g2.fillRect(playerX + 20, playerY + 8, 6, 6);
+
+        g2.setColor(Color.BLACK);
+        g2.drawOval(playerX + 10, playerY + 8, 6, 6);
+        g2.drawOval(playerX + 20, playerY + 8, 6, 6);
+
+        g2.setColor(Color.WHITE);
+        g2.fillRect(playerX + 10, playerY + 12, 2, 2);
+        g2.fillRect(playerX + 22, playerY + 12, 2, 2);
+
+        g2.setColor(Color.GREEN);
+        g2.fillRect(enemyX, enemyY, enemyWidth, enemyHeight);
+        g2.setColor(Color.BLACK);
+        g2.drawRect(enemyX, enemyY, enemyWidth, enemyHeight);
+
+        g2.setColor(Color.BLACK);
+        g2.setFont(new Font("Arial", Font.BOLD, 24));
+        g2.drawString("Score: " + score, 20, 40);
+
+        if (gameOver) {
+            g2.setColor(new Color(0, 0, 0, 180));
+            g2.fillRect(0, 0, WIDTH, HEIGHT);
+            g2.setColor(Color.WHITE);
+            g2.setFont(new Font("Arial", Font.BOLD, 36));
+            g2.drawString("Game Over", WIDTH / 2 - 110, HEIGHT / 2 - 10);
+            g2.setFont(new Font("Arial", Font.PLAIN, 18));
+            g2.drawString("Close and run again to play", WIDTH / 2 - 145, HEIGHT / 2 + 25);
+        }
+
+        g2.dispose();
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(whacAMole::new);
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Mario Style Game");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setResizable(false);
+
+            whacAMole game = new whacAMole();
+            frame.add(game);
+            frame.pack();
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+            game.requestFocusInWindow();
+        });
     }
 }
