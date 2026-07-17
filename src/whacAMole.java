@@ -115,36 +115,44 @@ public class whacAMole extends JPanel implements ActionListener {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        g2.setColor(new Color(120, 200, 255));
+        GradientPaint sky = new GradientPaint(0, 0, new Color(20, 60, 140), 0, HEIGHT, new Color(120, 220, 255));
+        g2.setPaint(sky);
         g2.fillRect(0, 0, WIDTH, HEIGHT);
 
-        g2.setColor(new Color(34, 139, 34));
-        g2.fillRect(0, GROUND_Y, WIDTH, HEIGHT - GROUND_Y);
+        g2.setColor(new Color(255, 210, 80));
+        g2.fillOval(620, 40, 90, 90);
 
-        g2.setColor(Color.WHITE);
+        g2.setColor(new Color(255, 255, 255, 180));
         g2.fillOval(80, 70, 60, 40);
         g2.fillOval(120, 60, 80, 50);
         g2.fillOval(560, 90, 70, 45);
         g2.fillOval(620, 75, 90, 55);
 
-        g2.setColor(new Color(120, 70, 20));
-        g2.fillRect(0, GROUND_Y, WIDTH, 8);
+        g2.setColor(new Color(25, 90, 55));
+        g2.fillRect(0, GROUND_Y, WIDTH, HEIGHT - GROUND_Y);
+
+        g2.setColor(new Color(70, 150, 90));
+        g2.fillPolygon(new int[] { 0, 140, 280, 420, 620, 800 }, new int[] { GROUND_Y, 330, 290, 360, 320, GROUND_Y },
+                6);
+
+        g2.setColor(new Color(40, 70, 120));
+        g2.fillRect(0, GROUND_Y, WIDTH, 10);
 
         g2.setColor(new Color(160, 82, 45));
         g2.fillRect(250, 330, 140, 18);
         g2.fillRect(500, 300, 140, 18);
 
-        g2.setColor(new Color(250, 200, 60));
+        g2.setColor(new Color(40, 80, 180));
         g2.fillOval(playerX, playerY, playerWidth, playerHeight);
 
-        g2.setColor(Color.RED);
+        g2.setColor(new Color(255, 120, 30));
         g2.fillRect(playerX + 4, playerY + 18, playerWidth - 8, 20);
 
-        g2.setColor(new Color(80, 40, 0));
+        g2.setColor(new Color(20, 20, 20));
         g2.fillRect(playerX + 8, playerY + 22, 8, 12);
         g2.fillRect(playerX + 20, playerY + 22, 8, 12);
 
-        g2.setColor(Color.BLUE);
+        g2.setColor(new Color(255, 255, 255));
         g2.fillRect(playerX + 10, playerY + 8, 6, 6);
         g2.fillRect(playerX + 20, playerY + 8, 6, 6);
 
@@ -156,9 +164,9 @@ public class whacAMole extends JPanel implements ActionListener {
         g2.fillRect(playerX + 10, playerY + 12, 2, 2);
         g2.fillRect(playerX + 22, playerY + 12, 2, 2);
 
-        g2.setColor(Color.GREEN);
+        g2.setColor(new Color(220, 40, 120));
         g2.fillRect(enemyX, enemyY, enemyWidth, enemyHeight);
-        g2.setColor(Color.BLACK);
+        g2.setColor(new Color(30, 20, 20));
         g2.drawRect(enemyX, enemyY, enemyWidth, enemyHeight);
 
         g2.setColor(Color.BLACK);
