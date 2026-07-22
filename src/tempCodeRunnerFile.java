@@ -1,0 +1,1 @@
+    private boolean jumping = false;
