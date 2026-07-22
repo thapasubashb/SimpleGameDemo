@@ -18,6 +18,7 @@ public class SnakeGame extends JPanel implements ActionListener {
     private int appleY;
     private char direction = 'R';
     private boolean running = false;
+    private boolean paused = false;
     private Timer timer;
     private final Random random;
 
@@ -44,7 +45,7 @@ public class SnakeGame extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (running) {
+        if (running && !paused) {
             move();
             checkApple();
             checkCollisions();
@@ -107,27 +108,66 @@ public class SnakeGame extends JPanel implements ActionListener {
     }
 
     private void draw(Graphics g) {
-        if (running) {
-            g.setColor(Color.RED);
-            g.fillOval(appleX, appleY, UNIT_SIZE, UNIT_SIZE);
+        Graphics2D g2 = (Graphics2D) g.create();
+        // Background gradient
+        GradientPaint bg = new GradientPaint(0, 0, new Color(10, 24, 36), 0, HEIGHT, new Color(20, 90, 60));
+        g2.setPaint(bg);
+        g2.fillRect(0, 0, WIDTH, HEIGHT);
 
-            for (int i = 0; i < bodyParts; i++) {
-                if (i == 0) {
-                    g.setColor(Color.GREEN.brighter());
-                    g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
-                } else {
-                    g.setColor(new Color(45, 180, 0));
-                    g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
-                }
-            }
-
-            g.setColor(Color.WHITE);
-            g.setFont(new Font("Ink Free", Font.BOLD, 20));
-            FontMetrics metrics = getFontMetrics(g.getFont());
-            g.drawString("Score: " + applesEaten, 10, metrics.getHeight());
-        } else {
-            gameOver(g);
+        // Subtle grid
+        g2.setColor(new Color(255, 255, 255, 20));
+        for (int i = 0; i < WIDTH; i += UNIT_SIZE) {
+            g2.drawLine(i, 0, i, HEIGHT);
         }
+        for (int j = 0; j < HEIGHT; j += UNIT_SIZE) {
+            g2.drawLine(0, j, WIDTH, j);
+        }
+
+        // Draw apple with highlight
+        g2.setColor(new Color(220, 40, 40));
+        g2.fillOval(appleX + 2, appleY + 2, UNIT_SIZE - 4, UNIT_SIZE - 4);
+        g2.setColor(new Color(255, 180, 180, 180));
+        g2.fillOval(appleX + 6, appleY + 4, UNIT_SIZE / 3, UNIT_SIZE / 3);
+
+        // Draw snake
+        for (int i = 0; i < bodyParts; i++) {
+            if (i == 0) {
+                g2.setColor(new Color(120, 220, 120));
+                g2.fillRoundRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE, UNIT_SIZE / 2, UNIT_SIZE / 2);
+            } else {
+                float t = (float) i / Math.max(1, bodyParts - 1);
+                int r = (int) (30 + t * 80);
+                int gr = (int) (120 + t * 80);
+                int b = (int) (30 + t * 20);
+                g2.setColor(new Color(r, gr, b));
+                g2.fillOval(x[i] + 2, y[i] + 2, UNIT_SIZE - 4, UNIT_SIZE - 4);
+            }
+        }
+
+        // HUD bar
+        g2.setColor(new Color(0, 0, 0, 120));
+        g2.fillRect(0, 0, WIDTH, 36);
+        g2.setColor(Color.WHITE);
+        g2.setFont(new Font("SansSerif", Font.BOLD, 18));
+        g2.drawString("Score: " + applesEaten, 12, 24);
+        g2.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        g2.drawString("Arrows: Move  ", 140, 20);
+        g2.drawString("P: Pause  ", 240, 20);
+        g2.drawString("Space: Restart (after game over)", 320, 20);
+
+        if (!running) {
+            gameOver(g2);
+        } else if (paused) {
+            g2.setColor(new Color(0, 0, 0, 160));
+            g2.fillRect(0, 0, WIDTH, HEIGHT);
+            g2.setColor(Color.WHITE);
+            g2.setFont(new Font("SansSerif", Font.BOLD, 48));
+            FontMetrics fm = g2.getFontMetrics();
+            String s = "PAUSED";
+            g2.drawString(s, (WIDTH - fm.stringWidth(s)) / 2, HEIGHT / 2);
+        }
+
+        g2.dispose();
     }
 
     private void gameOver(Graphics g) {
@@ -166,6 +206,18 @@ public class SnakeGame extends JPanel implements ActionListener {
                     if (direction != 'U')
                         direction = 'D';
                     break;
+                case KeyEvent.VK_P:
+                    if (running) {
+                        paused = !paused;
+                        if (paused) {
+                            if (timer != null)
+                                timer.stop();
+                        } else {
+                            if (timer != null)
+                                timer.start();
+                        }
+                    }
+                    break;
                 case KeyEvent.VK_SPACE:
                     if (!running) {
                         resetGame();
@@ -179,6 +231,7 @@ public class SnakeGame extends JPanel implements ActionListener {
         bodyParts = 6;
         applesEaten = 0;
         direction = 'R';
+        paused = false;
         for (int i = 0; i < bodyParts; i++) {
             x[i] = 0;
             y[i] = 0;
