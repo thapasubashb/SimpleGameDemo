@@ -61,11 +61,11 @@ public class BoxBoxGame extends JPanel {
     private void loadBackgroundImage() {
         try {
             // Randomly select one of the two images
-            String[] images = {"piranha.png", "monty.png"};
+            String[] images = { "piranha.png", "monty.png" };
             String imageName = images[random.nextInt(images.length)];
             String imagePath = new File(BoxBoxGame.class.getProtectionDomain()
                     .getCodeSource().getLocation().getPath()).getParent() + File.separator + imageName;
-            
+
             backgroundImage = ImageIO.read(new File(imagePath));
         } catch (Exception e) {
             // If image loading fails, continue without background image
@@ -156,6 +156,31 @@ public class BoxBoxGame extends JPanel {
                 0, HEIGHT, new Color(35, 35, 60));
         g2d.setPaint(backgroundGradient);
         g2d.fillRect(0, 0, WIDTH, HEIGHT);
+
+        // Draw background image as watermark
+        if (backgroundImage != null) {
+            float alpha = 0.15f; // 15% opacity for the background image
+            AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha);
+            g2d.setComposite(composite);
+
+            // Scale and position the image to cover the background
+            int imgWidth = backgroundImage.getWidth();
+            int imgHeight = backgroundImage.getHeight();
+
+            // Scale image to fit the game area
+            double scale = Math.max((double) WIDTH / imgWidth, (double) HEIGHT / imgHeight);
+            int scaledWidth = (int) (imgWidth * scale);
+            int scaledHeight = (int) (imgHeight * scale);
+
+            // Center the scaled image
+            int imgX = (WIDTH - scaledWidth) / 2;
+            int imgY = (HEIGHT - scaledHeight) / 2;
+
+            g2d.drawImage(backgroundImage, imgX, imgY, scaledWidth, scaledHeight, null);
+
+            // Reset composite for normal drawing
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+        }
 
         // Draw header background
         g2d.setColor(new Color(10, 10, 20));
