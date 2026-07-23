@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.util.Random;
 
 public class BoxBoxGame extends JPanel {
@@ -10,12 +11,15 @@ public class BoxBoxGame extends JPanel {
     private static final int BOX_SIZE = 100;
     private static final int GRID_ROWS = 3;
     private static final int GRID_COLS = 3;
+    private static final int HEADER_HEIGHT = 80;
 
     private int score = 0;
+    private int highScore = 0;
     private int correctBox = 0;
     private boolean gameOver = false;
     private String gameOverMessage = "";
     private Random random;
+    private int hoveredBox = -1;
 
     // Box positions
     private int[] boxX = new int[GRID_ROWS * GRID_COLS];
@@ -24,7 +28,7 @@ public class BoxBoxGame extends JPanel {
     public BoxBoxGame() {
         random = new Random();
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
-        setBackground(new Color(30, 30, 30));
+        setBackground(new Color(20, 20, 35));
         setFocusable(true);
         initializeBoxPositions();
         correctBox = random.nextInt(GRID_ROWS * GRID_COLS);
@@ -35,11 +39,40 @@ public class BoxBoxGame extends JPanel {
                 handleMouseClick(e.getX(), e.getY());
             }
         });
+
+        addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                updateHoveredBox(e.getX(), e.getY());
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                updateHoveredBox(e.getX(), e.getY());
+            }
+        });
+    }
+
+    private void updateHoveredBox(int mouseX, int mouseY) {
+        int previousHovered = hoveredBox;
+        hoveredBox = -1;
+
+        for (int i = 0; i < GRID_ROWS * GRID_COLS; i++) {
+            if (mouseX >= boxX[i] && mouseX <= boxX[i] + BOX_SIZE &&
+                    mouseY >= boxY[i] && mouseY <= boxY[i] + BOX_SIZE) {
+                hoveredBox = i;
+                break;
+            }
+        }
+
+        if (previousHovered != hoveredBox) {
+            repaint();
+        }
     }
 
     private void initializeBoxPositions() {
         int startX = (WIDTH - (GRID_COLS * BOX_SIZE)) / 2;
-        int startY = (HEIGHT - (GRID_ROWS * BOX_SIZE)) / 2 + 50;
+        int startY = HEADER_HEIGHT + (HEIGHT - HEADER_HEIGHT - (GRID_ROWS * BOX_SIZE)) / 2;
         int spacing = 20;
 
         int index = 0;
@@ -78,9 +111,13 @@ public class BoxBoxGame extends JPanel {
     }
 
     private void resetGame() {
+        if (score > highScore) {
+            highScore = score;
+        }
         score = 0;
         gameOver = false;
         gameOverMessage = "";
+        hoveredBox = -1;
         correctBox = random.nextInt(GRID_ROWS * GRID_COLS);
         repaint();
     }
