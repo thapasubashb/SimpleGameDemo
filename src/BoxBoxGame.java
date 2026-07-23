@@ -127,47 +127,151 @@ public class BoxBoxGame extends JPanel {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
-        // Draw boxes
+        // Draw gradient background
+        GradientPaint backgroundGradient = new GradientPaint(
+                0, 0, new Color(20, 20, 35),
+                0, HEIGHT, new Color(35, 35, 60));
+        g2d.setPaint(backgroundGradient);
+        g2d.fillRect(0, 0, WIDTH, HEIGHT);
+
+        // Draw header background
+        g2d.setColor(new Color(10, 10, 20));
+        g2d.fillRect(0, 0, WIDTH, HEADER_HEIGHT);
+
+        // Draw header border
+        g2d.setColor(new Color(100, 150, 255));
+        g2d.setStroke(new BasicStroke(3));
+        g2d.drawLine(0, HEADER_HEIGHT - 2, WIDTH, HEADER_HEIGHT - 2);
+
+        // Draw score text
+        g2d.setColor(new Color(100, 200, 255));
+        g2d.setFont(new Font("Arial", Font.BOLD, 28));
+        g2d.drawString("Score: " + score, 40, 55);
+
+        // Draw high score text
+        g2d.setColor(new Color(255, 200, 100));
+        g2d.setFont(new Font("Arial", Font.BOLD, 20));
+        g2d.drawString("High Score: " + highScore, WIDTH - 280, 55);
+
+        // Draw boxes with enhanced styling
         for (int i = 0; i < GRID_ROWS * GRID_COLS; i++) {
-            if (i == correctBox) {
-                g2d.setColor(new Color(0, 200, 100)); // Green for correct box
-            } else {
-                g2d.setColor(new Color(200, 50, 50)); // Red for wrong boxes
+            drawEnhancedBox(g2d, i);
+        }
+
+        // Draw game over overlay
+        if (gameOver) {
+            drawGameOverScreen(g2d);
+        }
+    }
+
+    private void drawEnhancedBox(Graphics2D g2d, int boxIndex) {
+        int x = boxX[boxIndex];
+        int y = boxY[boxIndex];
+        boolean isCorrect = (boxIndex == correctBox);
+        boolean isHovered = (boxIndex == hoveredBox);
+
+        // Draw shadow
+        g2d.setColor(new Color(0, 0, 0, 80));
+        int shadowOffset = isHovered ? 8 : 10;
+        g2d.fillRect(x + 5, y + shadowOffset, BOX_SIZE, BOX_SIZE);
+
+        // Draw glow for correct box
+        if (isCorrect) {
+            for (int i = 10; i > 0; i--) {
+                g2d.setColor(new Color(0, 255, 150, 20 - (i * 2)));
+                g2d.setStroke(new BasicStroke(i / 2f));
+                g2d.drawRect(x - i / 2, y - i / 2, BOX_SIZE + i, BOX_SIZE + i);
             }
+        }
 
-            g2d.fillRect(boxX[i], boxY[i], BOX_SIZE, BOX_SIZE);
+        // Draw main box
+        if (isCorrect) {
+            // Green gradient for correct box
+            GradientPaint boxGradient = new GradientPaint(
+                    x, y, new Color(50, 220, 130),
+                    x, y + BOX_SIZE, new Color(0, 180, 100));
+            g2d.setPaint(boxGradient);
+        } else {
+            // Red gradient for wrong boxes
+            GradientPaint boxGradient = new GradientPaint(
+                    x, y, new Color(255, 100, 100),
+                    x, y + BOX_SIZE, new Color(200, 40, 40));
+            g2d.setPaint(boxGradient);
+        }
 
-            // Draw border
+        int boxOffset = isHovered ? -5 : 0;
+        g2d.fillRect(x, y + boxOffset, BOX_SIZE, BOX_SIZE);
+
+        // Draw border with glow effect for hovered
+        if (isHovered) {
+            g2d.setColor(new Color(255, 255, 200));
+            g2d.setStroke(new BasicStroke(5));
+        } else {
             g2d.setColor(Color.WHITE);
             g2d.setStroke(new BasicStroke(3));
-            g2d.drawRect(boxX[i], boxY[i], BOX_SIZE, BOX_SIZE);
         }
+        g2d.drawRect(x, y + boxOffset, BOX_SIZE, BOX_SIZE);
 
-        // Draw score
-        g2d.setColor(Color.WHITE);
-        g2d.setFont(new Font("Arial", Font.BOLD, 32));
-        g2d.drawString("Score: " + score, 50, 50);
-
-        // Draw game over message
-        if (gameOver) {
-            g2d.setColor(new Color(0, 0, 0, 150)); // Semi-transparent black
-            g2d.fillRect(0, 0, WIDTH, HEIGHT);
-
+        // Draw label for correct box
+        if (isCorrect) {
             g2d.setColor(Color.WHITE);
-            g2d.setFont(new Font("Arial", Font.BOLD, 48));
+            g2d.setFont(new Font("Arial", Font.BOLD, 14));
             FontMetrics fm = g2d.getFontMetrics();
-
-            String[] lines = gameOverMessage.split("\n");
-            int totalHeight = lines.length * fm.getHeight();
-            int startY = (HEIGHT - totalHeight) / 2;
-
-            for (int i = 0; i < lines.length; i++) {
-                int x = (WIDTH - fm.stringWidth(lines[i])) / 2;
-                int y = startY + (i + 1) * fm.getHeight();
-                g2d.drawString(lines[i], x, y);
-            }
+            String label = "CLICK ME!";
+            int labelX = x + (BOX_SIZE - fm.stringWidth(label)) / 2;
+            int labelY = y + boxOffset + ((BOX_SIZE - fm.getHeight()) / 2) + fm.getAscent();
+            g2d.drawString(label, labelX, labelY);
         }
+    }
+
+    private void drawGameOverScreen(Graphics2D g2d) {
+        // Semi-transparent overlay
+        g2d.setColor(new Color(0, 0, 0, 200));
+        g2d.fillRect(0, 0, WIDTH, HEIGHT);
+
+        // Draw game over panel
+        int panelWidth = 500;
+        int panelHeight = 300;
+        int panelX = (WIDTH - panelWidth) / 2;
+        int panelY = (HEIGHT - panelHeight) / 2;
+
+        // Panel background with gradient
+        GradientPaint panelGradient = new GradientPaint(
+                panelX, panelY, new Color(40, 40, 70),
+                panelX, panelY + panelHeight, new Color(20, 20, 40));
+        g2d.setPaint(panelGradient);
+        g2d.fillRoundRect(panelX, panelY, panelWidth, panelHeight, 20, 20);
+
+        // Panel border
+        g2d.setColor(new Color(255, 100, 100));
+        g2d.setStroke(new BasicStroke(3));
+        g2d.drawRoundRect(panelX, panelY, panelWidth, panelHeight, 20, 20);
+
+        // Draw "GAME OVER" text
+        g2d.setColor(new Color(255, 100, 100));
+        g2d.setFont(new Font("Arial", Font.BOLD, 56));
+        FontMetrics fm = g2d.getFontMetrics();
+        String gameOverText = "GAME OVER";
+        int textX = (WIDTH - fm.stringWidth(gameOverText)) / 2;
+        g2d.drawString(gameOverText, textX, panelY + 80);
+
+        // Draw final score
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(new Font("Arial", Font.BOLD, 36));
+        fm = g2d.getFontMetrics();
+        String scoreText = "Final Score: " + score;
+        textX = (WIDTH - fm.stringWidth(scoreText)) / 2;
+        g2d.drawString(scoreText, textX, panelY + 150);
+
+        // Draw restart instruction
+        g2d.setColor(new Color(150, 200, 255));
+        g2d.setFont(new Font("Arial", Font.BOLD, 18));
+        fm = g2d.getFontMetrics();
+        String restartText = "Click anywhere to restart!";
+        textX = (WIDTH - fm.stringWidth(restartText)) / 2;
+        g2d.drawString(restartText, textX, panelY + 230);
     }
 
     public static void main(String[] args) {
