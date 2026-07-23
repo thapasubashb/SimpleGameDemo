@@ -1,8 +1,11 @@
 import javax.swing.*;
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.Random;
 
 public class BoxBoxGame extends JPanel {
@@ -20,6 +23,7 @@ public class BoxBoxGame extends JPanel {
     private String gameOverMessage = "";
     private Random random;
     private int hoveredBox = -1;
+    private BufferedImage backgroundImage;
 
     // Box positions
     private int[] boxX = new int[GRID_ROWS * GRID_COLS];
@@ -30,6 +34,7 @@ public class BoxBoxGame extends JPanel {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(new Color(20, 20, 35));
         setFocusable(true);
+        loadBackgroundImage();
         initializeBoxPositions();
         correctBox = random.nextInt(GRID_ROWS * GRID_COLS);
 
@@ -51,6 +56,22 @@ public class BoxBoxGame extends JPanel {
                 updateHoveredBox(e.getX(), e.getY());
             }
         });
+    }
+
+    private void loadBackgroundImage() {
+        try {
+            // Randomly select one of the two images
+            String[] images = {"piranha.png", "monty.png"};
+            String imageName = images[random.nextInt(images.length)];
+            String imagePath = new File(BoxBoxGame.class.getProtectionDomain()
+                    .getCodeSource().getLocation().getPath()).getParent() + File.separator + imageName;
+            
+            backgroundImage = ImageIO.read(new File(imagePath));
+        } catch (Exception e) {
+            // If image loading fails, continue without background image
+            System.err.println("Could not load background image: " + e.getMessage());
+            backgroundImage = null;
+        }
     }
 
     private void updateHoveredBox(int mouseX, int mouseY) {
