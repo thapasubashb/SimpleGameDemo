@@ -25,7 +25,7 @@ public class JPanal {
                 DodgeGame.main(args);
                 break;
             case 4:
-                PixelQuest.main(args);
+                pixelquest.PixelQuestGame.main(args);
                 break;
             case 0:
             default:
