@@ -3,7 +3,7 @@ import javax.swing.*;
 
 public class JPanal {
     public static void main(String[] args) {
-        String[] options = { "Box Box Game", "Snake Game", "Mario Style", "Dodge Game" };
+        String[] options = { "Box Box Game", "Snake Game", "Mario Style", "Dodge Game", "Pixel Quest" };
         int choice = JOptionPane.showOptionDialog(
                 null,
                 "Select a game to play:",
@@ -23,6 +23,9 @@ public class JPanal {
                 break;
             case 3:
                 DodgeGame.main(args);
+                break;
+            case 4:
+                PixelQuest.main(args);
                 break;
             case 0:
             default:
