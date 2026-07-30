@@ -39,8 +39,19 @@ public class SnakeGame extends JPanel implements ActionListener {
     }
 
     private void newApple() {
-        appleX = random.nextInt(WIDTH / UNIT_SIZE) * UNIT_SIZE;
-        appleY = random.nextInt(HEIGHT / UNIT_SIZE) * UNIT_SIZE;
+        boolean validPosition;
+        do {
+            appleX = random.nextInt(WIDTH / UNIT_SIZE) * UNIT_SIZE;
+            appleY = random.nextInt(HEIGHT / UNIT_SIZE) * UNIT_SIZE;
+            validPosition = true;
+
+            for (int i = 0; i < bodyParts; i++) {
+                if (x[i] == appleX && y[i] == appleY) {
+                    validPosition = false;
+                    break;
+                }
+            }
+        } while (!validPosition);
     }
 
     @Override
@@ -79,6 +90,9 @@ public class SnakeGame extends JPanel implements ActionListener {
         if (x[0] == appleX && y[0] == appleY) {
             bodyParts++;
             applesEaten++;
+            if (timer != null) {
+                timer.setDelay(Math.max(40, DELAY - applesEaten * 3));
+            }
             newApple();
         }
     }
