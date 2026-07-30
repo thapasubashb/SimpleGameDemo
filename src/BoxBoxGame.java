@@ -19,6 +19,7 @@ public class BoxBoxGame extends JPanel {
     private int score = 0;
     private int highScore = 0;
     private int correctBox = 0;
+    private int comboStreak = 0;
     private boolean gameOver = false;
     private String gameOverMessage = "";
     private Random random;
@@ -117,11 +118,12 @@ public class BoxBoxGame extends JPanel {
                     mouseY >= boxY[i] && mouseY <= boxY[i] + BOX_SIZE) {
 
                 if (i == correctBox) {
-                    // Correct box clicked
-                    score++;
+                    comboStreak++;
+                    int points = 1 + (comboStreak >= 3 ? 1 : 0);
+                    score += points;
                     correctBox = random.nextInt(GRID_ROWS * GRID_COLS);
                 } else {
-                    // Wrong box clicked - Game Over
+                    comboStreak = 0;
                     gameOver = true;
                     gameOverMessage = "Game Over! Final Score: " + score + "\nClick to restart!";
                 }
@@ -136,6 +138,7 @@ public class BoxBoxGame extends JPanel {
             highScore = score;
         }
         score = 0;
+        comboStreak = 0;
         gameOver = false;
         gameOverMessage = "";
         hoveredBox = -1;
@@ -204,6 +207,11 @@ public class BoxBoxGame extends JPanel {
         g2d.setColor(new Color(255, 200, 100));
         g2d.setFont(new Font("Arial", Font.BOLD, 20));
         g2d.drawString("High Score: " + highScore, WIDTH - 280, 55);
+
+        // Draw combo streak
+        g2d.setColor(comboStreak >= 3 ? new Color(255, 255, 120) : new Color(200, 240, 255));
+        g2d.setFont(new Font("Arial", Font.BOLD, 18));
+        g2d.drawString("Combo: x" + Math.min(comboStreak, 9), WIDTH - 280, 80);
 
         // Draw boxes with enhanced styling
         for (int i = 0; i < GRID_ROWS * GRID_COLS; i++) {
