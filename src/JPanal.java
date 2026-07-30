@@ -3,13 +3,15 @@ import javax.swing.*;
 
 public class JPanal {
     public static void main(String[] args) {
-        String[] options = { "Box Box Game", "Snake Game", "Mario Style", "Dodge Game", "Pixel Quest" };
+        String[] options = { "Box Box Game", "Snake Game", "Whac-a-Mole", "Dodge Game", "Pixel Quest" };
+        String message = "<html><center><b>Welcome to Simple Game Demo</b><br>Choose a game to start playing.</center></html>";
+
         int choice = JOptionPane.showOptionDialog(
                 null,
-                "Select a game to play:",
+                message,
                 "Simple Game Demo",
                 JOptionPane.DEFAULT_OPTION,
-                JOptionPane.PLAIN_MESSAGE,
+                JOptionPane.INFORMATION_MESSAGE,
                 null,
                 options,
                 options[0]);
