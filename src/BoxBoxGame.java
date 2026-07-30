@@ -183,13 +183,17 @@ public class BoxBoxGame extends JPanel {
         }
 
         // Draw header background
-        g2d.setColor(new Color(10, 10, 20));
+        GradientPaint headerGradient = new GradientPaint(
+                0, 0, new Color(8, 12, 28),
+                0, HEADER_HEIGHT, new Color(35, 52, 95));
+        g2d.setPaint(headerGradient);
         g2d.fillRect(0, 0, WIDTH, HEADER_HEIGHT);
 
-        // Draw header border
-        g2d.setColor(new Color(100, 150, 255));
+        // Draw header border and accent
+        g2d.setColor(new Color(120, 220, 255));
         g2d.setStroke(new BasicStroke(3));
         g2d.drawLine(0, HEADER_HEIGHT - 2, WIDTH, HEADER_HEIGHT - 2);
+        g2d.fillRoundRect(24, 18, 140, 8, 6, 6);
 
         // Draw score text
         g2d.setColor(new Color(100, 200, 255));
@@ -221,7 +225,7 @@ public class BoxBoxGame extends JPanel {
         // Draw shadow
         g2d.setColor(new Color(0, 0, 0, 80));
         int shadowOffset = isHovered ? 8 : 10;
-        g2d.fillRect(x + 5, y + shadowOffset, BOX_SIZE, BOX_SIZE);
+        g2d.fillRoundRect(x + 5, y + shadowOffset, BOX_SIZE, BOX_SIZE, 24, 24);
 
         // Draw glow for correct box
         if (isCorrect) {
@@ -248,7 +252,7 @@ public class BoxBoxGame extends JPanel {
         }
 
         int boxOffset = isHovered ? -5 : 0;
-        g2d.fillRect(x, y + boxOffset, BOX_SIZE, BOX_SIZE);
+        g2d.fillRoundRect(x, y + boxOffset, BOX_SIZE, BOX_SIZE, 22, 22);
 
         // Draw border with glow effect for hovered
         if (isHovered) {
@@ -258,7 +262,7 @@ public class BoxBoxGame extends JPanel {
             g2d.setColor(Color.WHITE);
             g2d.setStroke(new BasicStroke(3));
         }
-        g2d.drawRect(x, y + boxOffset, BOX_SIZE, BOX_SIZE);
+        g2d.drawRoundRect(x, y + boxOffset, BOX_SIZE, BOX_SIZE, 22, 22);
 
         // Draw label for correct box
         if (isCorrect) {
