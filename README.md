@@ -1,18 +1,16 @@
-## Getting Started
+# Simple Game Demo
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+This project now focuses on one polished game: **Dodge Game**.
 
-## Folder Structure
+## How to play
 
-The workspace contains two folders by default, where:
+- Use the left and right arrow keys to move.
+- Avoid falling obstacles.
+- Press `Space` to restart after game over.
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
+## Run the game
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
+1. Open a terminal in the project root.
+2. Run `run.bat`.
 
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
-
-## Dependency Management
-
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+The batch file compiles `src\DodgeGame.java` and launches the game.

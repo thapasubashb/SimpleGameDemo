@@ -1,4 +1,4 @@
 @echo off
 cd /d "%~dp0"
-javac .\src\*.java -d .\bin
-java -cp .\bin JPanal
+javac .\src\DodgeGame.java -d .\bin
+java -cp .\bin DodgeGame
