@@ -26,6 +26,19 @@ public class DodgeGame extends JPanel implements ActionListener {
         GAME_OVER
     }
 
+    private static final int SIDE_PANEL_WIDTH = 280;
+    private static final Color BACKGROUND_TOP = new Color(8, 14, 42);
+    private static final Color BACKGROUND_BOTTOM = new Color(24, 42, 88);
+    private static final Color HUD_PANEL_COLOR = new Color(0, 0, 0, 150);
+    private static final Color HUD_TEXT_COLOR = new Color(230, 240, 255, 220);
+    private static final Color HUD_HINT_COLOR = new Color(220, 230, 255, 200);
+
+    private static final Font HUD_TITLE_FONT = new Font("Segoe UI", Font.BOLD, 22);
+    private static final Font HUD_TEXT_FONT = new Font("Segoe UI", Font.PLAIN, 18);
+    private static final Font HUD_HINT_FONT = new Font("Segoe UI", Font.PLAIN, 14);
+    private static final Font OVERLAY_TITLE_FONT = new Font("Segoe UI", Font.BOLD, 52);
+    private static final Font OVERLAY_TEXT_FONT = new Font("Segoe UI", Font.PLAIN, 20);
+
     private final List<Rectangle> obstacles = new ArrayList<>();
     private final Random random = new Random();
     private final Timer timer;
@@ -42,14 +55,16 @@ public class DodgeGame extends JPanel implements ActionListener {
     private GameListener statusListener;
 
     public DodgeGame() {
-        setPreferredSize(new Dimension(WIDTH, HEIGHT));
-        setBackground(new Color(12, 18, 42));
-        setFocusable(true);
-        addKeyListener(new InputAdapter());
-
+        initializePanel();
         timer = new Timer(TIMER_DELAY, this);
-        timer.start();
         resetGame(false);
+    }
+
+    private void initializePanel() {
+        setPreferredSize(new Dimension(WIDTH, HEIGHT));
+        setBackground(BACKGROUND_TOP);
+        setFocusable(true);
+        addKeyListener(new GameInputAdapter());
     }
 
     public void setGameListener(GameListener listener) {
@@ -65,14 +80,10 @@ public class DodgeGame extends JPanel implements ActionListener {
 
     public void togglePause() {
         if (gameState == GameState.PLAYING) {
-            gameState = GameState.PAUSED;
-            timer.stop();
+            pauseGame();
         } else if (gameState == GameState.PAUSED) {
-            gameState = GameState.PLAYING;
-            timer.start();
+            resumeGame();
         }
-        notifyStatus();
-        repaint();
     }
 
     public void restartGame() {
@@ -95,22 +106,36 @@ public class DodgeGame extends JPanel implements ActionListener {
         return obstacleSpeed;
     }
 
+    private void pauseGame() {
+        gameState = GameState.PAUSED;
+        timer.stop();
+        notifyStatus();
+        repaint();
+    }
+
+    private void resumeGame() {
+        gameState = GameState.PLAYING;
+        timer.start();
+        notifyStatus();
+        repaint();
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         if (gameState == GameState.PLAYING) {
-            updatePlayer();
-            updateObstacles();
-            checkCollisions();
-            score++;
-            obstacleSpeed = INITIAL_SPEED + score / 700;
-            spawnCounter += TIMER_DELAY;
-            if (spawnCounter >= Math.max(360, 1000 - score / 2)) {
-                spawnCounter = 0;
-                spawnObstacle();
-            }
+            updateGame();
         }
         notifyStatus();
         repaint();
+    }
+
+    private void updateGame() {
+        updatePlayer();
+        updateObstacles();
+        checkCollisions();
+        score++;
+        obstacleSpeed = INITIAL_SPEED + score / 700;
+        spawnObstacleIfNeeded();
     }
 
     private void updatePlayer() {
@@ -122,14 +147,18 @@ public class DodgeGame extends JPanel implements ActionListener {
         }
     }
 
-    private void spawnObstacle() {
-        int x = random.nextInt(WIDTH - OBSTACLE_SIZE - 40) + 20;
-        obstacles.add(new Rectangle(x, -OBSTACLE_SIZE, OBSTACLE_SIZE, OBSTACLE_SIZE));
+    private void spawnObstacleIfNeeded() {
+        spawnCounter += TIMER_DELAY;
+        int delay = Math.max(360, 1000 - score / 2);
+        if (spawnCounter >= delay) {
+            spawnCounter = 0;
+            int x = random.nextInt(WIDTH - OBSTACLE_SIZE - 40) + 20;
+            obstacles.add(new Rectangle(x, -OBSTACLE_SIZE, OBSTACLE_SIZE, OBSTACLE_SIZE));
+        }
     }
 
     private void updateObstacles() {
-        Iterator<Rectangle> iterator = obstacles.iterator();
-        while (iterator.hasNext()) {
+        for (Iterator<Rectangle> iterator = obstacles.iterator(); iterator.hasNext();) {
             Rectangle obstacle = iterator.next();
             obstacle.y += obstacleSpeed;
             if (obstacle.y > HEIGHT) {
@@ -142,12 +171,16 @@ public class DodgeGame extends JPanel implements ActionListener {
         Rectangle player = new Rectangle(playerX, PLAYER_Y, PLAYER_WIDTH, PLAYER_HEIGHT);
         for (Rectangle obstacle : obstacles) {
             if (player.intersects(obstacle)) {
-                gameState = GameState.GAME_OVER;
-                timer.stop();
-                highScore = Math.max(highScore, score);
+                endGame();
                 break;
             }
         }
+    }
+
+    private void endGame() {
+        gameState = GameState.GAME_OVER;
+        timer.stop();
+        highScore = Math.max(highScore, score);
     }
 
     private void resetGame(boolean startPlaying) {
@@ -159,15 +192,10 @@ public class DodgeGame extends JPanel implements ActionListener {
         movingLeft = false;
         movingRight = false;
 
-        if (startPlaying) {
-            gameState = GameState.PLAYING;
-            if (!timer.isRunning()) {
-                timer.start();
-            }
-        } else {
-            gameState = GameState.START;
+        gameState = startPlaying ? GameState.PLAYING : GameState.START;
+        if (startPlaying && !timer.isRunning()) {
+            timer.start();
         }
-
         notifyStatus();
         repaint();
     }
@@ -368,103 +396,101 @@ public class DodgeGame extends JPanel implements ActionListener {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Dodge Game");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setResizable(false);
+        SwingUtilities.invokeLater(DodgeGame::createAndShowGui);
+    }
 
-            DodgeGame gamePanel = new DodgeGame();
+    private static void createAndShowGui() {
+        JFrame frame = new JFrame("Dodge Game");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setResizable(false);
 
-            JPanel sidePanel = new JPanel();
-            sidePanel.setBackground(new Color(18, 24, 52));
-            sidePanel.setPreferredSize(new Dimension(280, HEIGHT));
-            sidePanel.setLayout(new GridBagLayout());
+        DodgeGame gamePanel = new DodgeGame();
+        JPanel sidePanel = buildSidePanel(gamePanel);
 
-            JLabel titleLabel = new JLabel("Dodge UI");
-            titleLabel.setForeground(new Color(210, 230, 255));
-            titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        JPanel container = new JPanel(new BorderLayout());
+        container.add(gamePanel, BorderLayout.CENTER);
+        container.add(sidePanel, BorderLayout.EAST);
 
-            JLabel scoreLabel = new JLabel("Score: 0");
-            scoreLabel.setForeground(Color.WHITE);
-            scoreLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        frame.setContentPane(container);
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+        gamePanel.requestFocusInWindow();
+    }
 
-            JLabel highScoreLabel = new JLabel("Best: 0");
-            highScoreLabel.setForeground(Color.WHITE);
-            highScoreLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+    private static JPanel buildSidePanel(DodgeGame gamePanel) {
+        JPanel sidePanel = new JPanel();
+        sidePanel.setBackground(new Color(18, 24, 52));
+        sidePanel.setPreferredSize(new Dimension(SIDE_PANEL_WIDTH, HEIGHT));
+        sidePanel.setLayout(new GridBagLayout());
 
-            JLabel speedLabel = new JLabel("Speed: 0");
-            speedLabel.setForeground(Color.WHITE);
-            speedLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        JLabel titleLabel = createInfoLabel("Dodge UI", new Font("Segoe UI", Font.BOLD, 26), new Color(210, 230, 255));
+        JLabel scoreLabel = createInfoLabel("Score: 0", HUD_TEXT_FONT, Color.WHITE);
+        JLabel highScoreLabel = createInfoLabel("Best: 0", HUD_TEXT_FONT, Color.WHITE);
+        JLabel speedLabel = createInfoLabel("Speed: 0", HUD_TEXT_FONT, Color.WHITE);
+        JLabel stateLabel = createInfoLabel("State: Start", new Font("Segoe UI", Font.PLAIN, 16),
+                new Color(180, 220, 255));
 
-            JLabel stateLabel = new JLabel("State: Start");
-            stateLabel.setForeground(new Color(180, 220, 255));
-            stateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-
-            JButton startButton = new JButton("Start");
-            startButton.setFocusPainted(false);
-            startButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-            startButton.addActionListener(e -> {
-                gamePanel.startGame();
-                gamePanel.requestFocusInWindow();
-            });
-
-            JButton pauseButton = new JButton("Pause");
-            pauseButton.setFocusPainted(false);
-            pauseButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-            pauseButton.addActionListener(e -> {
-                gamePanel.togglePause();
-                gamePanel.requestFocusInWindow();
-            });
-
-            JButton restartButton = new JButton("Restart");
-            restartButton.setFocusPainted(false);
-            restartButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-            restartButton.addActionListener(e -> {
-                gamePanel.restartGame();
-                gamePanel.requestFocusInWindow();
-            });
-
-            GridBagConstraints gbc = new GridBagConstraints();
-            gbc.gridx = 0;
-            gbc.insets = new Insets(16, 16, 12, 16);
-            gbc.anchor = GridBagConstraints.WEST;
-            gbc.fill = GridBagConstraints.HORIZONTAL;
-
-            gbc.gridy = 0;
-            sidePanel.add(titleLabel, gbc);
-            gbc.gridy = 1;
-            sidePanel.add(scoreLabel, gbc);
-            gbc.gridy = 2;
-            sidePanel.add(highScoreLabel, gbc);
-            gbc.gridy = 3;
-            sidePanel.add(speedLabel, gbc);
-            gbc.gridy = 4;
-            sidePanel.add(stateLabel, gbc);
-            gbc.gridy = 5;
-            gbc.insets = new Insets(24, 16, 4, 16);
-            sidePanel.add(startButton, gbc);
-            gbc.gridy = 6;
-            sidePanel.add(pauseButton, gbc);
-            gbc.gridy = 7;
-            sidePanel.add(restartButton, gbc);
-
-            gamePanel.setGameListener((currentScore, bestScore, speed, state) -> {
-                scoreLabel.setText("Score: " + currentScore);
-                highScoreLabel.setText("Best: " + bestScore);
-                speedLabel.setText("Speed: " + speed);
-                stateLabel.setText("State: " + state.name());
-                pauseButton.setText(state == GameState.PLAYING ? "Pause" : "Resume");
-            });
-
-            JPanel container = new JPanel(new BorderLayout());
-            container.add(gamePanel, BorderLayout.CENTER);
-            container.add(sidePanel, BorderLayout.EAST);
-
-            frame.setContentPane(container);
-            frame.pack();
-            frame.setLocationRelativeTo(null);
-            frame.setVisible(true);
+        JButton startButton = createControlButton("Start", () -> {
+            gamePanel.startGame();
             gamePanel.requestFocusInWindow();
         });
+        JButton pauseButton = createControlButton("Pause", () -> {
+            gamePanel.togglePause();
+            gamePanel.requestFocusInWindow();
+        });
+        JButton restartButton = createControlButton("Restart", () -> {
+            gamePanel.restartGame();
+            gamePanel.requestFocusInWindow();
+        });
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.insets = new Insets(16, 16, 12, 16);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        gbc.gridy = 0;
+        sidePanel.add(titleLabel, gbc);
+        gbc.gridy = 1;
+        sidePanel.add(scoreLabel, gbc);
+        gbc.gridy = 2;
+        sidePanel.add(highScoreLabel, gbc);
+        gbc.gridy = 3;
+        sidePanel.add(speedLabel, gbc);
+        gbc.gridy = 4;
+        sidePanel.add(stateLabel, gbc);
+        gbc.gridy = 5;
+        gbc.insets = new Insets(24, 16, 4, 16);
+        sidePanel.add(startButton, gbc);
+        gbc.gridy = 6;
+        sidePanel.add(pauseButton, gbc);
+        gbc.gridy = 7;
+        sidePanel.add(restartButton, gbc);
+
+        gamePanel.setGameListener((currentScore, bestScore, speed, state) -> {
+            scoreLabel.setText("Score: " + currentScore);
+            highScoreLabel.setText("Best: " + bestScore);
+            speedLabel.setText("Speed: " + speed);
+            stateLabel.setText("State: " + state.name());
+            pauseButton.setText(state == GameState.PLAYING ? "Pause" : "Resume");
+        });
+
+        return sidePanel;
+    }
+
+    private static JLabel createInfoLabel(String text, Font font, Color color) {
+        JLabel label = new JLabel(text);
+        label.setForeground(color);
+        label.setFont(font);
+        return label;
+    }
+
+    private static JButton createControlButton(String text, Runnable action) {
+        JButton button = new JButton(text);
+        button.setFocusPainted(false);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        button.addActionListener(e -> action.run());
+        return button;
     }
 }
