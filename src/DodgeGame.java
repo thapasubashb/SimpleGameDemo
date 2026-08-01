@@ -391,6 +391,49 @@ public class DodgeGame extends JPanel implements ActionListener {
         }
     }
 
+    private class GameInputAdapter extends KeyAdapter {
+        @Override
+        public void keyPressed(KeyEvent e) {
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_LEFT:
+                    if (gameState == GameState.PLAYING) {
+                        movingLeft = true;
+                    }
+                    break;
+                case KeyEvent.VK_RIGHT:
+                    if (gameState == GameState.PLAYING) {
+                        movingRight = true;
+                    }
+                    break;
+                case KeyEvent.VK_SPACE:
+                    if (gameState == GameState.START || gameState == GameState.GAME_OVER) {
+                        startGame();
+                    }
+                    break;
+                case KeyEvent.VK_P:
+                    if (gameState == GameState.PLAYING || gameState == GameState.PAUSED) {
+                        togglePause();
+                    }
+                    break;
+            }
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+            if (gameState != GameState.PLAYING) {
+                return;
+            }
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_LEFT:
+                    movingLeft = false;
+                    break;
+                case KeyEvent.VK_RIGHT:
+                    movingRight = false;
+                    break;
+            }
+        }
+    }
+
     public interface GameListener {
         void onStatusUpdate(int score, int highScore, int speed, GameState state);
     }
